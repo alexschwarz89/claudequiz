@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaudeQuiz</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="/css/game.css">
+</head>
+<body>
+
+<div id="screen-setup" class="screen active">
+    <div class="card setup-card">
+        <div class="logo">ClaudeQuiz</div>
+        <h2>Neues Spiel</h2>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="2">2 Spieler</button>
+            <button class="mode-btn" data-mode="1">1 Spieler</button>
+            <button class="mode-btn" data-mode="online">Online</button>
+        </div>
+
+        <div class="player-inputs" id="player-inputs">
+            <div class="input-group">
+                <label for="player1-name">Spieler 1</label>
+                <input type="text" id="player1-name" placeholder="Spieler 1" maxlength="20" autocomplete="off">
+            </div>
+            <div class="input-group" id="player2-group">
+                <label for="player2-name">Spieler 2</label>
+                <input type="text" id="player2-name" placeholder="Spieler 2" maxlength="20" autocomplete="off">
+            </div>
+        </div>
+
+        <div class="round-selector">
+            <label>Fragen pro Spieler</label>
+            <div class="round-options">
+                <button class="round-btn" data-value="5">5</button>
+                <button class="round-btn active" data-value="10">10</button>
+                <button class="round-btn" data-value="15">15</button>
+                <button class="round-btn" data-value="50">50</button>
+            </div>
+        </div>
+
+        <div class="category-selector">
+            <label>Kategorien</label>
+            <div class="category-grid" id="category-grid"></div>
+        </div>
+
+        <button id="start-btn" class="btn btn-primary btn-full">Spiel starten</button>
+
+        <div id="online-actions" class="online-actions" style="display:none">
+            <button id="create-room-btn" class="btn btn-primary btn-full">Raum erstellen</button>
+            <div class="online-or">— oder —</div>
+            <div class="online-join-row">
+                <input type="text" id="join-code-input" class="join-code-input" placeholder="CODE" maxlength="4" autocomplete="off" spellcheck="false">
+                <button id="join-room-btn" class="btn btn-primary">Beitreten</button>
+            </div>
+            <div id="join-error" class="join-error"></div>
+        </div>
+    </div>
+</div>
+
+<div id="screen-lobby" class="screen">
+    <div class="card center-card">
+        <div class="logo">ClaudeQuiz</div>
+        <h2 id="lobby-title">Warte auf Spieler</h2>
+        <div class="lobby-code-wrap">
+            <div class="lobby-code-label">Raum-Code</div>
+            <div id="lobby-code" class="lobby-code">----</div>
+        </div>
+        <div id="lobby-players" class="lobby-players"></div>
+        <p id="lobby-status" class="lobby-status">Warte auf Mitspieler…</p>
+        <button id="lobby-start-btn" class="btn btn-primary btn-full" style="display:none">Spiel starten ▶</button>
+        <button onclick="location.reload()" class="btn-ghost" style="margin-top:12px;width:100%">Abbrechen</button>
+    </div>
+</div>
+
+<div id="screen-loading" class="screen">
+    <div class="card center-card">
+        <div class="spinner"></div>
+        <p>Fragen werden geladen…</p>
+    </div>
+</div>
+
+<div id="screen-error" class="screen">
+    <div class="card center-card">
+        <div class="error-icon">⚠</div>
+        <h2>Keine Fragen gefunden</h2>
+        <p>Bitte zuerst Inhalte laden:</p>
+        <code>php bin/console aggregate:content</code>
+        <button onclick="location.reload()" class="btn btn-primary" style="margin-top:16px">Erneut versuchen</button>
+    </div>
+</div>
+
+<div id="screen-transition" class="screen">
+    <div class="card center-card transition-card">
+        <div id="transition-icon" class="player-icon"></div>
+        <h1 id="transition-name"></h1>
+        <p class="transition-subtitle">Du bist dran!</p>
+        <div id="transition-scores" class="inline-scores"></div>
+        <button id="ready-btn" class="btn btn-primary btn-full">Ich bin bereit</button>
+    </div>
+</div>
+
+<div id="screen-question" class="screen">
+    <div class="question-wrapper">
+        <div class="question-header">
+            <div class="header-left">
+                <span id="q-number" class="tag"></span>
+                <span id="q-category" class="tag tag-category"></span>
+            </div>
+            <div class="header-right">
+                <span id="q-timer" class="q-timer"></span>
+                <div id="header-scores" class="header-scores"></div>
+            </div>
+        </div>
+        <div id="combo-bar" class="combo-bar"></div>
+        <div id="question-card" class="card question-card"></div>
+        <div class="report-row">
+            <button id="btn-report" class="btn-report">Frage entfernen</button>
+        </div>
+    </div>
+</div>
+
+<div id="screen-results" class="screen">
+    <div class="card center-card results-card">
+        <div id="results-icon" class="results-icon"></div>
+        <h1 id="results-title"></h1>
+        <div id="results-scores" class="results-scores"></div>
+        <div id="results-stats" class="results-stats"></div>
+        <div id="results-highscores" class="results-highscores"></div>
+        <button id="new-game-btn" class="btn btn-primary btn-full">Neues Spiel</button>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/js/game.js"></script>
+</body>
+</html>

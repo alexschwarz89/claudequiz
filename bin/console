@@ -1,0 +1,24 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use App\Command\AggregateContentCommand;
+use App\Command\CleanupQuestionsCommand;
+use App\Command\CleanupRoomsCommand;
+use App\Command\PurgeReportedQuestionsCommand;
+use App\Command\StatsCommand;
+use App\Config\EnvLoader;
+use Symfony\Component\Console\Application;
+
+EnvLoader::load(__DIR__ . '/../.env');
+
+$application = new Application('ClaudeQuiz', '1.0.0');
+$application->add(new AggregateContentCommand());
+$application->add(new CleanupQuestionsCommand());
+$application->add(new CleanupRoomsCommand());
+$application->add(new PurgeReportedQuestionsCommand());
+$application->add(new StatsCommand());
+$application->run();

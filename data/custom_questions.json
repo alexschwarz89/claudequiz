@@ -1,0 +1,19 @@
+{
+    "true_false": [
+        {"statement": "Wasser besteht aus zwei Wasserstoff- und einem Sauerstoffatom.", "is_true": true},
+        {"statement": "Die Erde ist älter als die Sonne.", "is_true": false},
+        {"statement": "Bambus ist botanisch gesehen eine Grasart.", "is_true": true}
+    ],
+    "multiple_choice": [
+        {
+            "question": "Was ist die Hauptstadt von Deutschland?",
+            "answer": "Berlin",
+            "options": ["Berlin", "Hamburg", "München", "Frankfurt"]
+        },
+        {
+            "question": "Welches Tier ist das schnellste an Land?",
+            "answer": "Gepard",
+            "options": ["Gepard", "Löwe", "Pferd", "Strauß"]
+        }
+    ]
+}

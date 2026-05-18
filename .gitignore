@@ -1,0 +1,29 @@
+# Dependencies
+/vendor/
+
+# Environment — copy .env.dist and fill in your keys
+.env
+
+# Claude Code project settings
+/.claude/
+
+# Generated question database
+/data/questions.json
+/data/reported_questions.json
+/data/scores.json
+/data/rooms/
+
+# Generated media downloaded by aggregate:content
+/public/images/*.png
+/public/images/*.jpg
+/public/audio/songs/
+
+# Symfony var directory
+/var/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.iml

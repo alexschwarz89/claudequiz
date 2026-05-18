@@ -1,0 +1,419 @@
+Hund
+Katze
+Vogel
+Fisch
+Schlange
+Frosch
+Schildkröte
+Eichhörnchen
+Ratte
+Maus
+Kaninchen
+Hamster
+Meerschweinchen
+Pferd
+Kuh
+Schwein
+Schaf
+Ziege
+Esel
+Hirsch
+Reh
+Wildschwein
+Bär
+Wolf Tier
+Fuchs Tier
+Löwe Tier
+Tiger
+Leopard
+Elefant
+Giraffe
+Zebra
+Büffel
+Nashorn
+Nilpferd
+Krokodil
+Chamäleon
+Leguan
+Spinne
+Skorpion
+Libelle
+Biene
+Wespe
+Fliege
+Schmetterling
+Ameise
+Käfer
+Grille
+Heuschrecke
+Wurm
+Schnecke
+Hai
+Apfel Obst
+Birne Obst
+Banane Obst
+Orange Obst
+Zitrone Obst
+Kiwi Obst
+Mango Obst
+Ananas Obst
+Papaya Obst
+Traube Obst
+Erdbeere Obst
+Himbeere Obst
+Brombeere Obst
+Heidelbeere Obst
+Kirsche Obst
+Pfirsich Obst
+Aprikose Obst
+Pflaume Obst
+Wassermelone Obst
+Melone Obst
+Kürbis Gemüse
+Tomate Gemüse
+Gurke Gemüse
+Zucchini Gemüse
+Aubergine Gemüse
+Paprika Gemüse
+Chili Gemüse
+Zwiebel Gemüse
+Knoblauch Gemüse
+Lauch Gemüse
+Sellerie Gemüse
+Karotte Gemüse
+Rübe Gemüse
+Kartoffel Gemüse
+Süßkartoffel Gemüse
+Mais Gemüse
+Erbse Gemüse
+Bohne Gemüse
+Linse Gemüse
+Blumenkohl Gemüse
+Brokkoli Gemüse
+Kohl Gemüse
+Spinat Gemüse
+Kopfsalat Gemüse
+Rucola Gemüse
+Brot
+Croissant
+Butter
+Käse
+Joghurt
+Milch
+Quark
+Ei
+Schinken
+Wurst
+Salami
+Speck
+Hähnchen
+Pute
+Schweinefleisch
+Rindfleisch
+Lammfleisch
+Lachs
+Thunfisch
+Sardine
+Tintenfisch
+Shrimp
+Muschel
+Auster
+Krabbe
+Spaghetti
+Pizza
+Burger
+Sandwich
+Suppe
+Soße
+Speiseöl
+Essig
+Honig
+Marmelade
+Zucker
+Salz
+Pfeffer
+Paprikapulver
+Basilikum
+Oregano
+Thymian
+Ingwer
+Zimt
+Vanille
+Schokolade
+Kuchen
+Torte
+Keks
+Brezel
+Popcorn
+Pommes
+Reis
+Tisch
+Stuhl
+Sofa
+Schrank
+Regal
+Kommode
+Bett
+Kissen
+Decke
+Vorhang
+Gardine
+Jalousie
+Lampe
+Kerze
+Bilderrahmen
+Spiegel
+Uhr
+Waage
+Vase
+Obstschale
+Müllleimer
+Wäschekorb
+Wäscheständer
+Messer
+Gabel
+Löffel
+Teller
+Schüssel
+Tasse
+Becher
+Glas
+Flasche
+Dose
+Topf
+Pfanne
+Deckel
+Kochlöffel
+Spatel
+Schneebesen
+Nudelholz
+Sieb
+Reibe
+Korkenzieher
+Dosenöffner
+Messerblock
+Salzstreuer
+Pfefferstreuer
+Zuckerdose
+Butterdose
+Kühlschrank
+Gefrierschrank
+Backofen
+Herd
+Mikrowelle
+Wasserkocher
+Toaster
+Kaffeemaschine
+Mixer
+Brotdose
+Waschbecken
+Badewanne
+Toilette
+Dusche
+Handtuch
+Badetuch
+Zahnbürste
+Zahnpasta
+Seife
+Shampoo
+Haarbürste
+Kamm
+Rasierer
+Bürste
+Staubsauger
+Besen
+Mopp
+Putztuch
+Lappen
+Waschmaschine
+Wäschetrockner
+Bügeleisen
+Bügelbrett
+Auto
+Lastwagen
+Traktor
+Bagger
+Gabelstapler
+Krankenwagen
+Feuerwehrauto
+Polizeiauto
+Motorrad
+Roller
+Fahrrad
+Bus
+Doppeldeckerbus
+Straßenbahn
+Zug
+Lokomotive
+Schiff
+Boot
+Hubschrauber
+Flugzeug
+Heißluftballon
+Hammer
+Zange
+Spaten
+Schaufel
+Rechen
+Gartenschere
+Heckenschere
+Säge
+Kettensäge
+Feile
+Schraubendreher
+Bohrer
+Bohrmaschine
+Hobel
+Winkelschleifer
+Schleifstein
+Pickel
+Hacke
+Gartengabel
+Buch
+Notizbuch
+Heft
+Kugelschreiber
+Stift
+Filzstift
+Radiergummi
+Spitzer
+Lineal
+Schere
+Locher
+Tacker
+Monitor
+Tastatur
+Computermaus
+Drucker
+Fernseher
+Radio
+Lautsprecher
+Kopfhörer
+Gitarre
+Klavier
+Violine
+Trommel
+Flöte
+Trompete
+Kamera
+Taschenlampe
+Batterie
+Glühbirne
+Schlüssel
+Vorhängeschloss
+Nagel
+Schraube
+Dübel
+Kopf
+Gesicht
+Stirn
+Auge
+Augenbraue
+Nase
+Ohr
+Mund
+Lippe
+Zahn
+Zunge
+Hals
+Nacken
+Schulter
+Oberarm
+Ellbogen
+Unterarm
+Handgelenk
+Hand
+Daumen
+Zeigefinger
+Fingernagel
+Brust
+Rippe
+Bauch
+Bauchnabel
+Rücken
+Wirbelsäule
+Oberschenkel
+Knie
+Schienbein
+Wade
+Fuß
+Ferse
+Zehe
+Zehennagel
+Hemd
+T-Shirt
+Unterhemd
+Pullover
+Sweatshirt
+Hoodie
+Strickjacke
+Weste
+Jacke
+Winterjacke
+Regenjacke
+Lederjacke
+Regenmantel
+Parka
+Anzug
+Hose
+Jeans
+Shorts
+Badehose
+Trainingshose
+Leggings
+Strumpfhose
+Socke
+Schal
+Mütze
+Beanie
+Schirmmütze
+Baseballkappe
+Sonnenhut
+Strohhut
+Zylinder
+Handschuh
+Gürtel
+Krawatte
+Baum
+Palme
+Kaktus
+Rose
+Tulpe
+Narzisse
+Sonnenblume
+Lavendel
+Lilie
+Orchidee
+Chrysantheme
+Dahlie
+Schneeglöckchen
+Krokus
+Flieder
+Forsythie
+Hortensie
+Rhododendron
+Kamille Pflanze
+Brennnessel Pflanze
+Efeu Pflanze
+Moos Pflanze
+Pilz Pflanze
+Kirche
+Burg
+Schloss
+Leuchtturm
+Windmühle
+Brücke
+Brunnen
+Zaun
+Tor
+Mauer
+Treppe
+Leiter
+Igel Tier
+Delfin Tier
+Wal Tier
+Krebs Tier
+Garnele
+Stachelschwein Tier
+Geier Tier
+Elch Tier
