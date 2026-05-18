@@ -11,7 +11,7 @@ ClaudeQuiz is a local two-player quiz game that runs entirely in the browser wit
 ## Installation
 
 ```bash
-git clone https://github.com/your-username/claudequiz.git
+git clone https://github.com/alexschwarz89/claudequiz.git
 cd claudequiz
 composer install
 cp .env.dist .env

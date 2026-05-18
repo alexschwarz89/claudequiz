@@ -62,6 +62,12 @@ function normalizeAnswer(text) {
     return String(text).toLowerCase().replace(/\s+/g, '');
 }
 
+function answerMatchesWord(input, answer) {
+    const normalized = String(input).toLowerCase().trim();
+    if (normalized.length === 0) return false;
+    return String(answer).toLowerCase().split(/\s+/).some(word => word === normalized);
+}
+
 function showScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     el(`screen-${name}`).classList.add('active');
@@ -627,14 +633,14 @@ function attachImageRevealHandlers(question) {
 
     input.addEventListener('input', () => {
         if (questionAnswered) return;
-        if (normalizeAnswer(question.answer).includes(normalizeAnswer(input.value)) && normalizeAnswer(input.value).length > 0) {
+        if (answerMatchesWord(input.value, question.answer)) {
             judgeImageReveal(true, question);
         }
     });
 
     const checkAnswer = () => {
         if (questionAnswered) return;
-        judgeImageReveal(normalizeAnswer(question.answer).includes(normalizeAnswer(input.value)) && normalizeAnswer(input.value).length > 0, question);
+        judgeImageReveal(answerMatchesWord(input.value, question.answer), question);
     };
 
     el('btn-check').addEventListener('click', checkAnswer);
