@@ -17,6 +17,7 @@ final readonly class Question
         public ?string $audioUrl = null,
         public ?float $latitude = null,
         public ?float $longitude = null,
+        public ?string $videoPath = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -32,6 +33,7 @@ final readonly class Question
             audioUrl: $data['audio_url'] ?? null,
             latitude: isset($data['latitude']) ? (float) $data['latitude'] : null,
             longitude: isset($data['longitude']) ? (float) $data['longitude'] : null,
+            videoPath: $data['video_path'] ?? null,
         );
     }
 
@@ -57,6 +59,9 @@ final readonly class Question
         if ($this->latitude !== null) {
             $data['latitude'] = $this->latitude;
             $data['longitude'] = $this->longitude;
+        }
+        if ($this->videoPath !== null) {
+            $data['video_path'] = $this->videoPath;
         }
 
         return $data;

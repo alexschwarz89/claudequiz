@@ -14,4 +14,6 @@ enum QuestionType: string
     case MultipleChoice = 'multiple_choice';
     case Kopfrechnen = 'kopfrechnen';
     case Gedaechtnisspiel = 'gedaechtnisspiel';
+    case FilmScene = 'film_scene';
+    case YouTubeCreator = 'youtube_creator';
 }

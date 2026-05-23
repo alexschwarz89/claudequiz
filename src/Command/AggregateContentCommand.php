@@ -6,13 +6,18 @@ namespace App\Command;
 
 use App\Aggregator\AggregatorInterface;
 use App\Aggregator\FlagAggregator;
+use App\Aggregator\FilmSceneAggregator;
 use App\Aggregator\WordlistFormat;
 use App\Aggregator\ImageRevealAggregator;
 use App\Aggregator\LocationAggregator;
 use App\Aggregator\MultipleChoiceAggregator;
 use App\Aggregator\SongAggregator;
 use App\Aggregator\TrueFalseAggregator;
+use App\Aggregator\TmdbClient;
+use App\Aggregator\VideoDownloader;
 use App\Aggregator\WordlistReader;
+use App\Aggregator\YouTubeClient;
+use App\Aggregator\YouTubeCreatorAggregator;
 use App\Config\EnvLoader;
 use App\Model\Question;
 use App\Provider\ApiProvider;
@@ -21,6 +26,7 @@ use App\Provider\PixabayImageProvider;
 use App\Provider\ProviderType;
 use App\Provider\QuestionProviderInterface;
 use App\Provider\TranslatingProvider;
+use App\Http\WikimediaHttpClient;
 use App\Provider\WikimediaImageProvider;
 use App\Provider\WikipediaProvider;
 use App\Translator\DeepLTranslator;
@@ -43,6 +49,8 @@ final class AggregateContentCommand extends Command
     private const IMAGES_DIR     = __DIR__ . '/../../public/images';
     private const AUDIO_DIR      = __DIR__ . '/../../public/audio/songs';
     private const AUDIO_WEB_PATH = '/audio/songs';
+    private const VIDEO_DIR      = __DIR__ . '/../../public/video';
+    private const VIDEO_WEB_PATH = '/video';
     private const PROJECT_DIR    = __DIR__ . '/../..';
     private const DEFAULT_COUNT  = 20;
     private const SUPPORTED_LANGS = ['de', 'en'];
@@ -56,7 +64,6 @@ final class AggregateContentCommand extends Command
             ->addOption('lang', null, InputOption::VALUE_OPTIONAL, 'Language for questions (de or en)', 'de')
             ->addOption('clear-images', null, InputOption::VALUE_NONE, 'Delete all cached images before aggregating')
             ->addOption('debug', null, InputOption::VALUE_NONE, 'Show provider debug output (also enabled by -v)')
-            ->addOption('random-words', null, InputOption::VALUE_NONE, 'Pick words randomly from WORDLIST_PATH instead of sequentially from the top')
             ->addOption('generate-flags', null, InputOption::VALUE_NONE, 'Include flag_mc aggregation (excluded by default)');
     }
 
@@ -82,12 +89,12 @@ final class AggregateContentCommand extends Command
         $isDebug     = $input->getOption('debug') || $output->isVerbose();
         $debugLogger = $isDebug ? fn(string $msg) => $io->writeln("  <comment>[debug] $msg</comment>") : null;
 
-        $client         = HttpClient::create(['timeout' => 30]);
-        $provider       = $this->buildProvider($providerType, $client, $lang, $debugLogger);
+        $client          = HttpClient::create(['timeout' => 30]);
+        $wikimediaClient = new WikimediaHttpClient($client, EnvLoader::get('WIKIMEDIA_USER_AGENT', 'ClaudeQuiz/1.0'));
+        $provider        = $this->buildProvider($providerType, $client, $wikimediaClient, $lang, $debugLogger);
         $generateFlags  = (bool) $input->getOption('generate-flags');
-        $randomWords    = (bool) $input->getOption('random-words');
 
-        $allAggregators = $this->buildAllAggregators($lang, $client, $provider, $debugLogger, $randomWords);
+        $allAggregators = $this->buildAllAggregators($lang, $client, $wikimediaClient, $provider, $debugLogger);
         $aggregators    = $this->filterAggregatorsByCategory($allAggregators, $categories, $generateFlags);
         $repository = new QuestionRepository(self::DATA_FILE);
         $blacklist  = new BlacklistRepository(self::BLACKLIST_FILE);
@@ -121,7 +128,7 @@ final class AggregateContentCommand extends Command
         $io->writeln(sprintf('  → %d new questions added', count($uniqueNew)));
     }
 
-    private function buildProvider(ProviderType $type, HttpClientInterface $client, string $lang, ?\Closure $debugLogger): QuestionProviderInterface
+    private function buildProvider(ProviderType $type, HttpClientInterface $client, HttpClientInterface $wikimediaClient, string $lang, ?\Closure $debugLogger): QuestionProviderInterface
     {
         $triviaUrl = $lang === 'de'
             ? EnvLoader::get('OPENTRIVIA_URL_DE', 'https://api.opentrivia.de')
@@ -135,9 +142,10 @@ final class AggregateContentCommand extends Command
                 $debugLogger,
             ),
             ProviderType::Wikipedia => new WikipediaProvider(
-                $client,
+                $wikimediaClient,
                 EnvLoader::get('ANTHROPIC_API_KEY'),
                 EnvLoader::get('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages'),
+                $this->resolveWikipediaExcludeTopics($lang),
                 $debugLogger,
             ),
             ProviderType::File => new FileProvider(
@@ -173,6 +181,14 @@ final class AggregateContentCommand extends Command
         ));
     }
 
+    /** @return string[] */
+    private function resolveWikipediaExcludeTopics(string $lang): array
+    {
+        $raw = EnvLoader::get('WIKIPEDIA_EXCLUDE_TOPICS_' . strtoupper($lang), '');
+
+        return array_values(array_filter(array_map('trim', explode(',', $raw))));
+    }
+
     private function buildWordlistReader(): ?WordlistReader
     {
         $raw = EnvLoader::get('WORDLIST_PATH');
@@ -195,14 +211,14 @@ final class AggregateContentCommand extends Command
     private function buildAllAggregators(
         string $lang,
         HttpClientInterface $client,
+        HttpClientInterface $wikimediaClient,
         QuestionProviderInterface $provider,
         ?\Closure $debugLogger,
-        bool $randomWords,
     ): array {
         $imageProviderType = EnvLoader::get('IMAGE_PROVIDER', 'pixabay');
         $imageProvider = match($imageProviderType) {
             'wikimedia' => new WikimediaImageProvider(
-                $client,
+                $wikimediaClient,
                 EnvLoader::get('WIKIMEDIA_API_URL', 'https://en.wikipedia.org/w/api.php'),
             ),
             default => new PixabayImageProvider(
@@ -224,9 +240,9 @@ final class AggregateContentCommand extends Command
                 self::AUDIO_WEB_PATH,
                 $lang,
             ),
-            'image_reveal'    => new ImageRevealAggregator($imageProvider, $lang, $debugLogger, $this->buildWordlistReader(), $randomWords),
+            'image_reveal'    => new ImageRevealAggregator($imageProvider, $lang, $debugLogger, $this->buildWordlistReader()),
             'location'        => new LocationAggregator(
-                $client,
+                $wikimediaClient,
                 self::IMAGES_DIR,
                 EnvLoader::get('WIKIDATA_SPARQL_URL', 'https://query.wikidata.org/sparql'),
                 $lang,
@@ -243,6 +259,8 @@ final class AggregateContentCommand extends Command
                 $flagScope,
                 $this->resolveFlagMinPopulation($flagScope),
             ),
+            'film_scene'      => $this->buildVideoAggregator('film_scene', $client, $lang, $debugLogger),
+            'youtube_creator' => $this->buildVideoAggregator('youtube_creator', $client, $lang, $debugLogger),
         ];
     }
 
@@ -263,6 +281,43 @@ final class AggregateContentCommand extends Command
             fn(string $key) => in_array($key, $categories, true),
             ARRAY_FILTER_USE_KEY
         );
+    }
+
+    private function buildVideoAggregator(string $type, HttpClientInterface $client, string $lang, ?\Closure $debugLogger): AggregatorInterface
+    {
+        $youtubeKey  = EnvLoader::get('YOUTUBE_API_KEY', '');
+        $ytDlpBin    = EnvLoader::get('YTDLP_BIN', 'yt-dlp');
+        $youtube     = new YouTubeClient($client, $youtubeKey, $debugLogger);
+        $downloader  = new VideoDownloader(self::VIDEO_DIR, self::VIDEO_WEB_PATH, $ytDlpBin, $debugLogger);
+
+        return match ($type) {
+            'film_scene' => new FilmSceneAggregator(
+                new TmdbClient($client, EnvLoader::get('TMDB_API_KEY', ''), $debugLogger),
+                $youtube,
+                $downloader,
+                $lang,
+                (int) EnvLoader::get('YOUTUBE_FILM_MIN_VIEWS', '100000'),
+                $debugLogger,
+            ),
+            default => new YouTubeCreatorAggregator(
+                $youtube,
+                $downloader,
+                $this->resolveCreatorsFile(),
+                $lang,
+                $debugLogger,
+            ),
+        };
+    }
+
+    private function resolveCreatorsFile(): string
+    {
+        $configured = EnvLoader::get('YOUTUBE_CREATORS_FILE', '');
+
+        if ($configured !== '') {
+            return str_starts_with($configured, '/') ? $configured : self::PROJECT_DIR . '/' . ltrim($configured, '/');
+        }
+
+        return self::PROJECT_DIR . '/data/youtube_creators.txt';
     }
 
     private function resolveFlagMinPopulation(string $scope): int

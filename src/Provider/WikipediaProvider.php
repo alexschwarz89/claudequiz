@@ -7,13 +7,15 @@ namespace App\Provider;
 use App\Model\Question;
 use App\Model\QuestionType;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 
 final class WikipediaProvider implements QuestionProviderInterface
 {
-    private const WIKI_API_URL    = 'https://%s.wikipedia.org/w/api.php';
-    private const MODEL           = 'claude-haiku-4-5-20251001';
-    private const PER_ARTICLE     = 1;
-    private const MAX_POOL_SIZE   = 1000;
+    private const WIKI_API_URL      = 'https://%s.wikipedia.org/w/api.php';
+    private const MODEL             = 'claude-haiku-4-5-20251001';
+    private const PER_ARTICLE       = 1;
+    private const MAX_RETRIES       = 4;
+    private const RETRY_FALLBACK_US = 5_000_000; // 5s — Wikimedia minimum when no Retry-After header
     private const FEATURED_CATEGORY = [
         'de' => 'Kategorie:Wikipedia:Exzellent',
         'en' => 'Category:Featured_articles',
@@ -21,11 +23,13 @@ final class WikipediaProvider implements QuestionProviderInterface
 
     /** @var array<string, list<string>> */
     private array $titlePool = [];
+    private bool $rateLimitExhausted = false;
 
     public function __construct(
         private readonly HttpClientInterface $client,
         private readonly string $anthropicApiKey,
         private readonly string $anthropicApiUrl,
+        private readonly array $excludedTopics = [],
         private readonly ?\Closure $debugLogger = null,
     ) {}
 
@@ -46,6 +50,12 @@ final class WikipediaProvider implements QuestionProviderInterface
         while (count($questions) < $count && $attempts < $maxAttempts) {
             $attempts++;
             $article = $this->fetchRandomArticle($lang);
+
+            if ($this->rateLimitExhausted) {
+                $this->debug(sprintf('Rate limit exhausted — saving %d questions and stopping', count($questions)));
+                break;
+            }
+
             if ($article === null) {
                 continue;
             }
@@ -53,7 +63,7 @@ final class WikipediaProvider implements QuestionProviderInterface
             $needed    = $count - count($questions);
             $generated = $this->generateQuestions($article, min(self::PER_ARTICLE, $needed), $format, $lang);
             $questions = array_merge($questions, $generated);
-            usleep(300_000);
+            usleep(1_500_000);
         }
 
         return array_slice($questions, 0, $count);
@@ -66,7 +76,14 @@ final class WikipediaProvider implements QuestionProviderInterface
             return null;
         }
 
-        return $this->fetchExtract($lang, $title);
+        $article = $this->fetchArticle($lang, $title);
+
+        if ($article !== null && $this->isExcludedByTopic($article['categories'])) {
+            $this->debug("Skipped (topic filter): {$title}");
+            return null;
+        }
+
+        return $article;
     }
 
     private function resolveRandomTitle(string $lang): ?string
@@ -97,7 +114,9 @@ final class WikipediaProvider implements QuestionProviderInterface
         do {
             [$batch, $token] = $this->fetchTitleBatch($lang, $category, $token);
             $titles = array_merge($titles, $batch);
-        } while ($token !== null && count($titles) < self::MAX_POOL_SIZE);
+        } while ($token !== null);
+
+        shuffle($titles);
 
         $this->debug(sprintf('Loaded %d featured article titles (%s)', count($titles), $lang));
 
@@ -121,47 +140,142 @@ final class WikipediaProvider implements QuestionProviderInterface
             $query['cmcontinue'] = $continueToken;
         }
 
-        try {
-            $response = $this->client->request('GET', sprintf(self::WIKI_API_URL, $lang), ['query' => $query]);
-            $data     = $response->toArray();
-        } catch (\Throwable) {
-            return [[], null];
+        for ($attempt = 0; $attempt <= self::MAX_RETRIES; $attempt++) {
+            try {
+                $response   = $this->client->request('GET', sprintf(self::WIKI_API_URL, $lang), ['query' => $query]);
+                $statusCode = $response->getStatusCode();
+
+                if ($statusCode === 429 || $statusCode === 503) {
+                    if ($attempt === self::MAX_RETRIES) {
+                        $this->debug('fetchTitleBatch: rate limit persists — aborting title load');
+                        return [[], null];
+                    }
+                    $delay = $this->resolveRetryDelay($response, self::RETRY_FALLBACK_US);
+                    $this->debug(sprintf('fetchTitleBatch: %d — retrying in %ds...', $statusCode, $delay / 1_000_000));
+                    usleep($delay);
+                    continue;
+                }
+
+                $data = $response->toArray();
+            } catch (\Throwable $e) {
+                $this->debug('fetchTitleBatch failed: ' . $e->getMessage());
+                return [[], null];
+            }
+
+            $titles = array_column($data['query']['categorymembers'] ?? [], 'title');
+            $next   = $data['continue']['cmcontinue'] ?? null;
+
+            return [$titles, $next];
         }
 
-        $titles = array_column($data['query']['categorymembers'] ?? [], 'title');
-        $next   = $data['continue']['cmcontinue'] ?? null;
-
-        return [$titles, $next];
+        return [[], null];
     }
 
-    private function fetchExtract(string $lang, string $title): ?array
+    private function fetchArticle(string $lang, string $title): ?array
     {
-        try {
-            $response = $this->client->request('GET', sprintf(self::WIKI_API_URL, $lang), [
-                'query' => [
-                    'action'      => 'query',
-                    'prop'        => 'extracts',
-                    'exintro'     => true,
-                    'explaintext' => true,
-                    'exsentences' => 8,
-                    'titles'      => $title,
-                    'format'      => 'json',
-                ],
-            ]);
-            $data = $response->toArray();
-        } catch (\Throwable) {
-            return null;
+        $delays = [2_000_000, 4_000_000, 8_000_000, 16_000_000];
+        $data   = null;
+
+        for ($attempt = 0; $attempt <= count($delays); $attempt++) {
+            try {
+                $response   = $this->client->request('GET', sprintf(self::WIKI_API_URL, $lang), [
+                    'query' => [
+                        'action'      => 'query',
+                        'prop'        => 'extracts|categories',
+                        'exintro'     => true,
+                        'explaintext' => true,
+                        'exsentences' => 8,
+                        'cllimit'     => 50,
+                        'clshow'      => '!hidden',
+                        'titles'      => $title,
+                        'format'      => 'json',
+                    ],
+                ]);
+                $statusCode = $response->getStatusCode();
+
+                if ($statusCode === 429 || $statusCode === 503) {
+                    if ($attempt === count($delays)) {
+                        $this->debug('fetchArticle: rate limit persists after final retry — giving up');
+                        $this->rateLimitExhausted = true;
+                        return null;
+                    }
+                    $delay = $this->resolveRetryDelay($response, $delays[$attempt]);
+                    $this->debug(sprintf('fetchArticle: %d — retrying in %ds...', $statusCode, $delay / 1_000_000));
+                    usleep($delay);
+                    continue;
+                }
+
+                $data = $response->toArray();
+                break;
+            } catch (\Throwable $e) {
+                if ($attempt === count($delays)) {
+                    $this->debug('fetchArticle failed: ' . $e->getMessage());
+                    $this->rateLimitExhausted = true;
+                    return null;
+                }
+                $delay = $delays[$attempt];
+                $this->debug(sprintf('fetchArticle error, retrying in %ds...', $delay / 1_000_000));
+                usleep($delay);
+            }
         }
 
         $pages   = $data['query']['pages'] ?? [];
         $page    = reset($pages);
-        $extract = is_array($page) ? ($page['extract'] ?? '') : '';
+
+        if (!is_array($page)) {
+            return null;
+        }
+
+        $extract = $page['extract'] ?? '';
 
         if (strlen(trim($extract)) < 80) {
             return null;
         }
 
-        return ['title' => $title, 'extract' => substr($extract, 0, 2000)];
+        return [
+            'title'      => $title,
+            'extract'    => substr($extract, 0, 2000),
+            'categories' => array_column($page['categories'] ?? [], 'title'),
+        ];
+    }
+
+    private function resolveRetryDelay(ResponseInterface $response, int $fallback): int
+    {
+        $headers    = $response->getHeaders(false);
+        $retryAfter = $headers['retry-after'][0] ?? null;
+
+        if ($retryAfter !== null) {
+            $seconds = is_numeric($retryAfter)
+                ? (int) $retryAfter
+                : max(0, strtotime($retryAfter) - time());
+
+            if ($seconds > 0) {
+                $this->debug(sprintf('Retry-After header: %ds', $seconds));
+                return $seconds * 1_000_000;
+            }
+        }
+
+        // Wikimedia policy: minimum 5s when no Retry-After header is present
+        return max($fallback, 5_000_000);
+    }
+
+    /** @param string[] $categories */
+    private function isExcludedByTopic(array $categories): bool
+    {
+        if (empty($this->excludedTopics)) {
+            return false;
+        }
+
+        foreach ($categories as $category) {
+            $normalized = strtolower(preg_replace('/^Kategorie:|^Category:/i', '', $category));
+            foreach ($this->excludedTopics as $topic) {
+                if (str_contains($normalized, strtolower(trim($topic)))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function generateQuestions(array $article, int $count, QuestionFormat $format, string $lang): array
@@ -189,6 +303,7 @@ final class WikipediaProvider implements QuestionProviderInterface
                 {$extract}
 
                 Generate {$count} true/false quiz statements in {$langLabel}. Mix true and false answers.
+                Focus on widely known facts that any educated adult would recognise. Avoid specific dates, statistics, records, or details only specialists would know.
 
                 STRICT RULES — violating any rule makes the entry unusable:
                 1. Write STATEMENTS only, never questions. A statement never ends with "?".
@@ -211,6 +326,7 @@ final class WikipediaProvider implements QuestionProviderInterface
                 {$extract}
 
                 Generate {$count} multiple-choice quiz questions in {$langLabel}. Each must have exactly 4 options.
+                Focus on widely known facts — what {$title} is, what it is known for, where it is, or what category it belongs to. Avoid specific dates, statistics, records, or details only specialists would know.
                 The question MUST name the subject explicitly (e.g. "{$title}") — never use "it", "he", "she", "they", "the book", "the film" without naming it.
                 Keep the question text short (maximum 8 words including the subject name).
                 IMPORTANT: Never translate names, brands, places, person names, or proper nouns. Keep them in their original language.

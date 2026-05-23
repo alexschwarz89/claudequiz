@@ -1,0 +1,182 @@
+# YouTube creator channel handles — one entry per line.
+#
+# Format:
+#   @handle              — YouTube handle; display name taken from the API
+#   @handle|Display Name — override the display name used as the quiz answer
+#
+# Add or remove channels freely. The aggregator picks randomly from this list
+# each run, so more channels = more variety across aggregation runs.
+@tsurikishow|Tsuriki Show
+@dhruvrathee|Dhruv Rathee
+@youneszarou|Younes Zarou
+@kurzgesagt|Kurzgesagt – In a Nutshell
+@boxtoxtv|boxtoxtv
+@haertetest|HaerteTest
+@crazyfrog|Crazy Frog
+@secretvlog|Secret Vlog
+@tvkde|The Voice Kids
+@icecreamrolls|Ice Cream Rolls
+@germanspidey|German Spidey
+@pamelarf1|Pamela Reif
+@theglobalanimalsworld|The Global Animals World
+@rammsteinofficial|Rammstein Official
+@ameerbros|Ameer Bros
+@davearditoverse|Dave Ardito
+@freekickerz|freekickerz
+@colorsxstudios|COLORS
+@growingannanas|growingannanas
+@taim.and.ghazal|زين و تيم
+@itstiktoktunes|TikTokTunes
+@zappyzoo|Zappy Zoo
+@mashabeargerman|Mascha und der Bär
+@marynaaksenov|Maryna Aksenov
+@kontorrecords|Kontor.TV
+@dwdocumentary|DW Documentary
+@aliomaryt|Ali Omar
+@dwnews|DW News
+@julienbam|Julien Bam
+@itsuniquevibes|Unique Vibes
+@dwdocumental|DW Documental
+@gamerrobot|Gamer Robot
+@nadinebreaty|nadinebreaty
+@freedocumentary|Free Documentary
+@luca|laserluca
+@paluten|Paluten
+@bibisbeautypalace|BibisBeautyPalace
+@metaforando|Metaforando
+@briqle|briQle
+@bundesliga|Bundesliga
+@dwespanol|DW Español
+@fcbayern|FC Bayern München
+@nikwildanimals|Nik Wild Animals
+@dolliedeath|Death Dollie
+@skitsgerman|SKITS German
+@drshorts|Dhruv Rathee Shorts
+@4hawa|4Hawa
+@dwhindi|DW हिन्दी
+@pasha_pel666|Паша Пэл
+@garricreative|Garri Creative
+@livanisstudio|Livani's Studio
+@arkivashqip|ArkivaShqip
+@gulsumunsarayitv|GÜLSÜMÜN SARAYI TV
+@q2q|حسون تركي
+@teenager-leben|Teenager-Leben
+@doktorlight|DOKTOR LIGHT
+@clipsmixxx|clips mix
+@calimove|Calisthenicmovement
+@wishness.shorts|Wishness
+@majesticcasual|Majestic Casual
+@icrimax|iCrimax
+@hausgemachterezepte|Hausgemachte Rezepte
+@madymorrison|Mady Morrison
+@keluargabahagiadijerman|Keluarga Bahagia Di Jerman
+@hurrakinderlieder|Hurra Kinderlieder
+@monsterchannel24|monsterchannel24
+@bblocks|BBlocks
+@leorojasofficial|LEO ROJAS - official
+@thebestshorts|The Best
+@dagibee|Dagi Bee
+@freshtorge|Freshtorge
+@singkinderlieder|Sing mit mir - Kinderlieder
+@teos_geschichten|Teos Geschichten
+@robinschulz|Robin Schulz
+@familybros|Family Bros
+@standartskill|Standart Skill
+@fox-family|Fox Family - Official Channel
+@germanletsplay|GermanLetsPlay
+@amira.alsaghira0|أميرة الصغيرة
+@zappytoonsandfriends|ZappyToons and Friends
+@eliffoods|Elif Foods
+@ikram.bellanova|Ikram Bellanova
+@wandsandwings|Wands and Wings
+@merrymargolive|Merry Margo Live
+@ai-lig|AI-lig music
+@merooffiziell|MERO
+@ungespielt|ungespielt
+@levent.geiger|Levent Geiger
+@apecrime|ApeCrime
+@wernerworidwide|Werner Worldwide
+@lami|LAMI
+@officialrjamuna|Official jamuna ka ghar
+@dhruvratheevlogs|Dhruv Rathee Vlogs
+@hakimmprime|HAKIM
+@airwavemusictv|AirwaveMusicTV
+@uyenninh|Uyen Ninh
+@packetheadshorts|Packet Head Shorts
+@rewinside|rewinside
+@juanbergmank|Juan Bergman
+@naomijon|Naomi Jon
+@gronkh|Gronkh
+@SimonDesue|Simon Desue
+@juliencotv|Julienco
+@essenrezepte1|Essen Rezepte
+@EUROPAKinderprogramm|Europa Kinderprogramm
+@FelixLaden|Felix von der Laden
+@galileo|Galileo
+@Y-Titty|Y-Titty
+@Bangermusik|BangerMusik
+@Bushido|Bushido
+@montanablack|MontanaBlack
+@MurkXtreme|MurkXtreme
+@ShirinDavid|Shirin David
+@jonas_ems|JONAS
+@LeFloid|LeFloid
+@unsympathischtv|UnsympathischTV
+@FritzMeinecke|Fritz Meinecke
+@inscope21|Inscope21
+@SpontanaBlack|SpontanaBlack
+@capitalbra|Capital Bra
+@DieLochis|Die Lochis
+@KinoCheck|KinoCheck
+@CrhymeTV|CrhymeTV
+@likenastyade|Like Nastya
+@Arazhul|Arazhul
+@HandOfBlood|HandOfBlood
+@urbanamadei|Urban Amadei
+@iblali|iBlali
+@pietsmiet|PietSmiet
+@JuliaBeautx|Julia Beautx
+@LeeroyMatata|Leeroy Matata
+@LeonMachere|Leon Machère
+@KelvinundMarvin|Kelvin und Marvin
+@Myspass|MySpass
+@KMNGANG|KMN Gang
+@MadeMyDay|Made My Day
+@DieAussenseiter|DieAussenseiter
+@TheVoiceOfGermany|The Voice of Germany
+@AviveHD|AviveHD
+@kinderliederzummitsingen|Kinderlieder zum Mitsingen
+@jpperformance|JP Performance
+@YallaGang|Yalla Gang
+@ApeCrimeTV|ApeCrimeTV
+@RebekahWing|Rebekah Wing
+@emrah|Emrah
+@moisdi|Mois
+@Trymacs|Trymacs
+@bastelnmitpapier|Basteln mit Papier
+@Zombey|Zombey
+@gewitterimkopf|Gewitter im Kopf
+@LittleBabyBum|Little Baby Bum
+@AnnenMayKantereit|AnnenMayKantereit
+@CrispyRob|CrispyRob
+@SallysWelt|Sallys Welt
+@JoeysJungle|Joey's Jungle
+@Dima|Dima
+@MrWissen2go|MrWissen2go
+@MissesVlog|Kelly MissesVlog
+@AGGROTV|AGGRO.TV
+@CartoonitoDE|Boomerang
+@Jayarya|Jay & Arya
+@Sarazar|Sarazar
+@ViktoriaSarina|ViktoriaSarina
+@DieCrew|Die Crew
+@MarkeyTV|Markey
+@SturmwaffelLP|Sturmwaffel
+@benx|Benx
+@LiebscherBracht|Liebscher & Bracht
+@Digstar|Digstar Pop
+@FeuerwehrmannSam|Feuerwehrmann Sam
+@lingualizer|Lingualizer
+@bullshittv|BULLSHIT TV
+@LeatA|xLeata
+@Rezojaloley|Rezo

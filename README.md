@@ -28,9 +28,10 @@ Edit `.env` to configure your question provider and any required API keys (see b
 ```env
 QUIZ_PROVIDER=API
 IMAGE_PROVIDER=wikimedia
+WORDLIST_PATH=data/ki_wordlist_v2.txt
 ```
 
-This uses [OpenTrivia](https://opentdb.com) for true/false and multiple-choice questions (free, no key) and Wikimedia for image-reveal images (free, no key). Flag questions are excluded by default.
+This uses [OpenTrivia](https://opentdb.com) for true/false and multiple-choice questions (free, no key) and Wikimedia for image-reveal images (free, no key). `WORDLIST_PATH` is required for the image-reveal category — without it no image questions are generated. Flag questions are excluded by default.
 
 ### Aggregate content
 
@@ -80,9 +81,6 @@ php bin/console aggregate:content --count=50
 # Include flag_mc (excluded by default — downloads ~100 flag images)
 php bin/console aggregate:content --generate-flags
 
-# Pick image-reveal words randomly from the wordlist instead of sequentially
-php bin/console aggregate:content --random-words
-
 # Clear all cached images and re-download
 php bin/console aggregate:content --clear-images
 
@@ -106,6 +104,8 @@ Copy `.env.dist` to `.env`. All variables have defaults; only API keys are sensi
 | `OPENTRIVIA_CATEGORIES` | `9,10,11,...` | Comma-separated OpenTrivia category IDs to draw from |
 | `ANTHROPIC_API_KEY` | _(empty)_ | Required when `QUIZ_PROVIDER=WIKIPEDIA` |
 | `ANTHROPIC_API_URL` | `https://api.anthropic.com/v1/messages` | Anthropic API endpoint |
+| `WIKIPEDIA_EXCLUDE_TOPICS_DE` | _(see .env.dist)_ | Comma-separated German Wikipedia category keywords to skip (e.g. `Geschichte,Sport,Kunst`). Browse category names at [de.wikipedia.org/wiki/Kategorie:Wikipedia:Exzellent](https://de.wikipedia.org/wiki/Kategorie:Wikipedia:Exzellent) |
+| `WIKIPEDIA_EXCLUDE_TOPICS_EN` | _(see .env.dist)_ | Comma-separated English Wikipedia category keywords to skip (e.g. `history,sport,art`). Browse at [en.wikipedia.org/wiki/Category:Featured_articles](https://en.wikipedia.org/wiki/Category:Featured_articles) |
 | `QUESTION_FILE_PATH` | `data/custom_questions.json` | Path to custom question file when `QUIZ_PROVIDER=FILE` |
 | `DEEPL_API_KEY` | _(empty)_ | Optional — enables translation when `--lang` is not `en` |
 | `DEEPL_API_URL_FREE` | `https://api-free.deepl.com/v2/translate` | DeepL Free endpoint |
@@ -119,7 +119,8 @@ Copy `.env.dist` to `.env`. All variables have defaults; only API keys are sensi
 | `PIXABAY_API_KEY` | _(empty)_ | Required when `IMAGE_PROVIDER=pixabay` |
 | `PIXABAY_API_URL` | `https://pixabay.com/api/` | Pixabay API endpoint |
 | `WIKIMEDIA_API_URL` | `https://en.wikipedia.org/w/api.php` | Wikimedia API endpoint |
-| `WORDLIST_PATH` | _(empty)_ | Path to a custom word list file; falls back to built-in subjects |
+| `WIKIMEDIA_USER_AGENT` | _(see .env.dist)_ | User-Agent for all Wikimedia requests. Must include a contact URL or email per the [Wikimedia User-Agent policy](https://meta.wikimedia.org/wiki/User-Agent_policy) |
+| `WORDLIST_PATH` | _(empty)_ | **Required** for image-reveal. Path to a word list file (relative to project root or absolute). Without this, no image-reveal questions are generated |
 | `WORDLIST_FORMAT` | `newline` | `newline` (one word per line) or `csv` (comma-separated) |
 
 ### Location category
@@ -210,7 +211,7 @@ php bin/console cleanup:questions
 bin/console              CLI entry point
 data/
   custom_questions.json  Example FILE-provider question set
-  ki_wordlist.txt        Built-in AI-topic word list (image reveal)
+  ki_wordlist_v2.txt     German word list for image reveal
 public/
   index.php              HTTP router
   js/game.js             Vanilla JS single-page game loop
@@ -221,6 +222,7 @@ src/
   Aggregator/            One aggregator per category
   Command/               Symfony Console commands
   Config/                .env loader
+  Http/                  HTTP client decorators (e.g. WikimediaHttpClient)
   Model/                 Question model and type enum
   Provider/              Text question providers (API, Wikipedia, File)
   Repository/            JSON file persistence layer

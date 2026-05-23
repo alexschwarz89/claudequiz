@@ -13,11 +13,6 @@ final class LocationAggregator implements AggregatorInterface
     private const CATEGORY_ID = 'location';
     private const IMAGE_WIDTH = 800;
 
-    /**
-     * No ORDER BY — avoids always returning the same top-N by sitelinks, which clusters
-     * heavily around Iraq/Italy/Egypt due to ancient-site Wikipedia coverage.
-     * The sitelinks FILTER still acts as a quality gate.
-     */
     private const SPARQL_QUERY = <<<'SPARQL'
 SELECT DISTINCT ?item ?itemLabel ?image ?deLabel ?countryLabel ?countryDeLabel ?coord ?sitelinks WHERE {
   VALUES ?type { wd:Q570116 wd:Q4989906 wd:Q839954 wd:Q4790 }
@@ -71,8 +66,11 @@ SPARQL;
 
         $landmarks = $this->fetchFromWikidata($this->wikidataFetchLimit);
         if (empty($landmarks)) {
+            $this->debug('No landmarks returned from Wikidata — aborting');
             return [];
         }
+
+        $this->debug(sprintf('%d landmarks parsed', count($landmarks)));
 
         $selected = array_slice(
             $this->applyGeographicDiversity($landmarks),
@@ -124,22 +122,26 @@ SPARQL;
     private function fetchFromWikidata(int $fetchLimit): array
     {
         $query = sprintf(self::SPARQL_QUERY, $this->wikidataMinSitelinks, $fetchLimit);
+        $this->debug(sprintf('SPARQL: minSitelinks=%d limit=%d', $this->wikidataMinSitelinks, $fetchLimit));
 
         try {
-            $response = $this->client->request('GET', $this->wikidataSparqlUrl, [
-                'query' => ['query' => $query, 'format' => 'json'],
-                'headers' => [
-                    'Accept'     => 'application/sparql-results+json',
-                    'User-Agent' => 'ClaudeQuiz/1.0 (quiz aggregation bot)',
-                ],
-                'timeout' => 30,
+            $response   = $this->client->request('GET', $this->wikidataSparqlUrl, [
+                'query'   => ['query' => $query, 'format' => 'json'],
+                'headers' => ['Accept' => 'application/sparql-results+json'],
+                'timeout' => 60,
             ]);
+            $statusCode = $response->getStatusCode();
+            $this->debug(sprintf('SPARQL response: HTTP %d', $statusCode));
             $data = $response->toArray();
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $this->debug('SPARQL request failed: ' . $e->getMessage());
             return [];
         }
 
-        return $this->parseWikidataResults($data['results']['bindings'] ?? []);
+        $bindings = $data['results']['bindings'] ?? [];
+        $this->debug(sprintf('SPARQL returned %d bindings', count($bindings)));
+
+        return $this->parseWikidataResults($bindings);
     }
 
     /** @return array<array{title: string, imageUrl: string, country: string, en: string, de: string, lat: float, lng: float}> */

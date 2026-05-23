@@ -9,6 +9,8 @@ const CATEGORY_LABELS = {
     multiple_choice:  'Multiple Choice',
     kopfrechnen:      'Kopfrechnen',
     gedaechtnisspiel: 'Gedächtnisspiel',
+    film_scene:       'Film erraten',
+    youtube_creator:  'Creator erraten',
 };
 
 const PLAYER_ICONS = ['🟣', '🟡'];
@@ -17,6 +19,7 @@ const IMAGE_REVEAL_SECONDS = 20;
 
 let currentRevealImagePath = null;
 let songAudio        = null;
+let videoEl          = null;
 let questionTimerId  = null;
 let questionAnswered = false;
 let questionStartedAt = 0;
@@ -128,8 +131,10 @@ function renderComboBar(streak) {
 }
 
 function resolveTimeoutMs(question) {
-    if (question.type === 'song_guess') return 60_000;
-    if (question.type === 'location')   return online.active ? 60_000 : 30_000;
+    if (question.type === 'song_guess')      return 60_000;
+    if (question.type === 'film_scene')      return 60_000;
+    if (question.type === 'youtube_creator') return 60_000;
+    if (question.type === 'location')        return online.active ? 60_000 : 30_000;
     return state.players.length > 1 ? 30_000 : 60_000;
 }
 
@@ -166,6 +171,7 @@ function handleTimeout(question) {
     if (questionAnswered) return;
     setAnswered();
     stopAudio();
+    stopVideo();
     revealCorrectAnswer(question);
     showTimeoutFeedback();
     if (online.active) {
@@ -417,14 +423,16 @@ function buildPlayerLabel() {
 
 function buildQuestion(question) {
     const builders = {
-        true_false:      () => buildTrueFalse(question),
-        song_guess:      () => buildSongGuess(question),
-        image_reveal:    () => buildImageReveal(question),
-        location:        () => buildLocation(question),
-        flag_mc:         () => buildFlagMc(question),
-        multiple_choice: () => buildMultipleChoice(question),
+        true_false:       () => buildTrueFalse(question),
+        song_guess:       () => buildSongGuess(question),
+        image_reveal:     () => buildImageReveal(question),
+        location:         () => buildLocation(question),
+        flag_mc:          () => buildFlagMc(question),
+        multiple_choice:  () => buildMultipleChoice(question),
         kopfrechnen:      () => buildKopfrechnen(question),
         gedaechtnisspiel: () => buildGedaechtnisspiel(question),
+        film_scene:       () => buildVideoGuess(question),
+        youtube_creator:  () => buildVideoGuess(question),
     };
 
     return (builders[question.type] ?? (() => ''))();
@@ -432,14 +440,16 @@ function buildQuestion(question) {
 
 function attachHandlers(question) {
     const handlers = {
-        true_false:      () => attachTrueFalseHandlers(question),
-        song_guess:      () => attachSongGuessHandlers(question),
-        image_reveal:    () => attachImageRevealHandlers(question),
-        location:        () => attachLocationHandlers(question),
-        flag_mc:         () => attachFlagMcHandlers(question),
-        multiple_choice: () => attachMultipleChoiceHandlers(question),
+        true_false:       () => attachTrueFalseHandlers(question),
+        song_guess:       () => attachSongGuessHandlers(question),
+        image_reveal:     () => attachImageRevealHandlers(question),
+        location:         () => attachLocationHandlers(question),
+        flag_mc:          () => attachFlagMcHandlers(question),
+        multiple_choice:  () => attachMultipleChoiceHandlers(question),
         kopfrechnen:      () => attachKopfrechnenHandlers(question),
         gedaechtnisspiel: () => attachGedaechtnisspielHandlers(question),
+        film_scene:       () => attachVideoGuessHandlers(question),
+        youtube_creator:  () => attachVideoGuessHandlers(question),
     };
 
     (handlers[question.type] ?? (() => {}))();
@@ -562,6 +572,79 @@ function stopAudio() {
     if (!songAudio) return;
     songAudio.pause();
     songAudio = null;
+}
+
+function stopVideo() {
+    if (!videoEl) return;
+    videoEl.pause();
+    videoEl = null;
+}
+
+// --- Video Guess (film_scene / youtube_creator) ---
+
+function buildVideoGuess(question) {
+    return `
+        <p class="question-text">${esc(question.question)}</p>
+        <div class="video-player">
+            <video id="video-el" src="${esc(question.video_path)}" preload="metadata" playsinline></video>
+        </div>
+        <div class="video-controls">
+            <button class="play-btn" id="play-btn">▶</button>
+            <div class="song-progress-wrap">
+                <div class="song-progress-bar">
+                    <div class="song-progress-fill" id="video-progress"></div>
+                </div>
+                <span class="song-time" id="video-time">0:00</span>
+            </div>
+        </div>
+        <button class="btn-ghost" id="btn-reveal" style="margin-bottom:14px">Antwort einblenden</button>
+        <div class="reveal-box" id="reveal-box">
+            <div class="reveal-label">Antwort</div>
+            <div class="reveal-answer">${esc(question.answer)}</div>
+        </div>
+        <div class="judge-row" id="judge-row">
+            <button class="btn-judge btn-correct-j" id="btn-correct">✓ Richtig</button>
+            <button class="btn-judge btn-wrong-j" id="btn-wrong">✗ Falsch</button>
+        </div>
+        <button class="btn btn-primary btn-next" id="btn-next">Weiter →</button>
+    `;
+}
+
+function attachVideoGuessHandlers(question) {
+    el('btn-next').addEventListener('click', () => { stopVideo(); advance(); });
+    el('btn-reveal').addEventListener('click', () => {
+        setAnswered();
+        el('reveal-box').classList.add('visible');
+        el('judge-row').classList.add('visible');
+    });
+    attachJudgeHandlers();
+
+    stopVideo();
+    stopAudio();
+    videoEl = el('video-el');
+
+    const playBtn    = el('play-btn');
+    const progressEl = el('video-progress');
+    const timeEl     = el('video-time');
+
+    playBtn.addEventListener('click', () => {
+        if (videoEl.paused) {
+            videoEl.play();
+            playBtn.textContent = '⏸';
+        } else {
+            videoEl.pause();
+            playBtn.textContent = '▶';
+        }
+    });
+
+    videoEl.addEventListener('timeupdate', () => {
+        const pct = videoEl.duration ? (videoEl.currentTime / videoEl.duration) * 100 : 0;
+        progressEl.style.width = pct + '%';
+        const s = Math.floor(videoEl.currentTime);
+        timeEl.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    });
+
+    videoEl.addEventListener('ended', () => { playBtn.textContent = '▶'; });
 }
 
 // --- Image Reveal ---
@@ -967,6 +1050,7 @@ function attachJudgeHandlers() {
 function advance() {
     clearTimers();
     stopAudio();
+    stopVideo();
     state.questionIndex++;
 
     if (state.questionIndex >= state.questions.length) {
